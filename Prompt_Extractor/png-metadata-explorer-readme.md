@@ -21,19 +21,6 @@ Stable Diffusion PNG Metadata Explorer is a Python-based desktop application tha
 - tkinter (usually comes pre-installed with Python)
 
 ### Steps
-
-1. Clone this repository or download the source code.
-2. Navigate to the project directory.
-3. (Optional) Create and activate a virtual environment:
-   ```
-   python -m venv venv
-   source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-   ```
-4. Install the required dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
-
 ## Usage
 
 1. Run the application:
