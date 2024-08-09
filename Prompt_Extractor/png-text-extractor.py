@@ -3,6 +3,7 @@ from tkinter import ttk, messagebox, filedialog
 import os
 import struct
 import re
+from PIL import Image, ImageTk
 
 def read_png_chunks(file_path):
     chunks = []
@@ -57,17 +58,23 @@ class App(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Stable Diffusion PNG Metadata Explorer")
-        self.geometry("1200x700")
-        self.create_widgets()
+        self.geometry("1400x800")
         self.dark_mode = False
+        self.thumbnail_size = (100, 100)
+        self.create_widgets()
 
     def create_widgets(self):
         self.grid_columnconfigure(0, weight=1)
-        self.grid_columnconfigure(1, weight=3)
         self.grid_rowconfigure(0, weight=1)
 
-        left_panel = ttk.Frame(self)
-        left_panel.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
+        # Main PanedWindow
+        self.main_paned = ttk.PanedWindow(self, orient=tk.HORIZONTAL)
+        self.main_paned.grid(row=0, column=0, sticky="nsew")
+
+        # Left panel with folder tree
+        left_panel = ttk.Frame(self.main_paned)
+        self.main_paned.add(left_panel, weight=1)
+
         left_panel.grid_rowconfigure(1, weight=1)
         left_panel.grid_columnconfigure(0, weight=1)
 
@@ -84,19 +91,51 @@ class App(tk.Tk):
         self.tree.bind('<<TreeviewOpen>>', self.open_node)
         self.tree.bind('<<TreeviewSelect>>', self.item_selected)
 
-        right_panel = ttk.Frame(self)
-        right_panel.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
-        right_panel.grid_rowconfigure(1, weight=1)
+        # Right PanedWindow
+        right_paned = ttk.PanedWindow(self.main_paned, orient=tk.HORIZONTAL)
+        self.main_paned.add(right_paned, weight=2)
+
+        # Middle panel with thumbnails
+        middle_panel = ttk.Frame(right_paned)
+        right_paned.add(middle_panel, weight=1)
+
+        middle_panel.grid_rowconfigure(0, weight=1)
+        middle_panel.grid_columnconfigure(0, weight=1)
+
+        self.thumbnail_canvas = tk.Canvas(middle_panel)
+        self.thumbnail_canvas.grid(row=0, column=0, sticky="nsew")
+
+        thumbnail_scrollbar = ttk.Scrollbar(middle_panel, orient="vertical", command=self.thumbnail_canvas.yview)
+        thumbnail_scrollbar.grid(row=0, column=1, sticky="ns")
+        self.thumbnail_canvas.configure(yscrollcommand=thumbnail_scrollbar.set)
+
+        self.thumbnail_frame = ttk.Frame(self.thumbnail_canvas)
+        self.thumbnail_canvas.create_window((0, 0), window=self.thumbnail_frame, anchor="nw")
+
+        self.thumbnail_frame.bind("<Configure>", self.on_frame_configure)
+
+        # Right panel
+        right_panel = ttk.Frame(right_paned)
+        right_paned.add(right_panel, weight=1)
+
+        right_panel.grid_rowconfigure(2, weight=1)
         right_panel.grid_columnconfigure(0, weight=1)
 
+        # Image preview
+        self.preview_label = ttk.Label(right_panel)
+        self.preview_label.grid(row=0, column=0, columnspan=2, pady=(0, 10))
+
+        # Prompt display and copy button
         self.prompt_text = tk.Text(right_panel, wrap=tk.WORD, height=3)
-        self.prompt_text.grid(row=0, column=0, sticky="ew", pady=(0, 5))
-        ttk.Button(right_panel, text="Copy Prompt", command=self.copy_prompt).grid(row=0, column=1, padx=(5, 0), sticky="ne")
+        self.prompt_text.grid(row=1, column=0, sticky="ew", pady=(0, 5))
+        ttk.Button(right_panel, text="Copy Prompt", command=self.copy_prompt).grid(row=1, column=1, padx=(5, 0), sticky="ne")
 
+        # Rest of metadata display
         self.result_text = tk.Text(right_panel, wrap=tk.WORD)
-        self.result_text.grid(row=1, column=0, columnspan=2, sticky="nsew")
+        self.result_text.grid(row=2, column=0, columnspan=2, sticky="nsew")
 
-        ttk.Button(self, text="Toggle Dark Mode", command=self.toggle_dark_mode).grid(row=1, column=0, columnspan=2, pady=5)
+        # Dark mode toggle
+        ttk.Button(self, text="Toggle Dark Mode", command=self.toggle_dark_mode).grid(row=1, column=0, pady=5)
 
     def browse_folder(self):
         folder_path = filedialog.askdirectory()
@@ -123,11 +162,57 @@ class App(tk.Tk):
         if children and self.tree.item(children[0])['text'] == '':
             self.tree.delete(children[0])
             self.process_directory(selected_item)
+        self.display_thumbnails(selected_item)
 
     def item_selected(self, event):
         selected_item = self.tree.focus()
         if os.path.isfile(selected_item) and selected_item.lower().endswith('.png'):
             self.display_metadata(selected_item)
+            self.display_image_preview(selected_item)
+        elif os.path.isdir(selected_item):
+            self.display_thumbnails(selected_item)
+
+    def display_thumbnails(self, directory):
+        for widget in self.thumbnail_frame.winfo_children():
+            widget.destroy()
+
+        row, col = 0, 0
+        for item in os.listdir(directory):
+            if item.lower().endswith('.png'):
+                full_path = os.path.join(directory, item)
+                try:
+                    img = Image.open(full_path)
+                    img.thumbnail(self.thumbnail_size)
+                    photo = ImageTk.PhotoImage(img)
+                    btn = ttk.Button(self.thumbnail_frame, image=photo, command=lambda p=full_path: self.on_thumbnail_click(p))
+                    btn.image = photo
+                    btn.grid(row=row, column=col, padx=5, pady=5)
+                    col += 1
+                    if col > 4:
+                        col = 0
+                        row += 1
+                except Exception as e:
+                    print(f"Error loading thumbnail for {item}: {e}")
+
+        self.thumbnail_frame.update_idletasks()
+        self.thumbnail_canvas.config(scrollregion=self.thumbnail_canvas.bbox("all"))
+
+    def on_thumbnail_click(self, file_path):
+        self.display_metadata(file_path)
+        self.display_image_preview(file_path)
+
+    def display_image_preview(self, file_path):
+        try:
+            img = Image.open(file_path)
+            img.thumbnail((300, 300))  # Adjust size as needed
+            photo = ImageTk.PhotoImage(img)
+            self.preview_label.config(image=photo)
+            self.preview_label.image = photo
+        except Exception as e:
+            print(f"Error displaying preview for {file_path}: {e}")
+
+    def on_frame_configure(self, event):
+        self.thumbnail_canvas.configure(scrollregion=self.thumbnail_canvas.bbox("all"))
 
     def display_metadata(self, file_path):
         try:
@@ -150,18 +235,23 @@ class App(tk.Tk):
 
     def toggle_dark_mode(self):
         self.dark_mode = not self.dark_mode
-        bg_color = '#2b2b2b' if self.dark_mode else 'white'
-        fg_color = 'white' if self.dark_mode else 'black'
+        bg_color = '#2b2b2b' if self.dark_mode else 'SystemButtonFace'
+        fg_color = 'white' if self.dark_mode else 'SystemButtonText'
         style = ttk.Style()
         if self.dark_mode:
             style.theme_use('clam')
+            style.configure(".", background=bg_color, foreground=fg_color)
             style.configure("Treeview", background=bg_color, foreground=fg_color, fieldbackground=bg_color)
             style.map('Treeview', background=[('selected', '#4a6984')])
+            style.configure("TFrame", background=bg_color)
+            style.configure("TButton", background=bg_color, foreground=fg_color)
+            style.configure("TLabel", background=bg_color, foreground=fg_color)
         else:
             style.theme_use('default')
         self.configure(bg=bg_color)
         self.prompt_text.configure(bg=bg_color, fg=fg_color)
         self.result_text.configure(bg=bg_color, fg=fg_color)
+        self.thumbnail_canvas.configure(bg=bg_color)
 
 if __name__ == "__main__":
     app = App()
