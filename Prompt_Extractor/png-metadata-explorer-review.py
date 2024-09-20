@@ -3,9 +3,9 @@ from tkinter import ttk, messagebox, filedialog
 import os
 import struct
 import re
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageDraw
 import csv
-import json
+import yaml
 
 def read_png_chunks(file_path):
     chunks = []
@@ -56,16 +56,25 @@ def format_metadata(metadata):
     formatted_rest = re.sub(r'([^,\s]+):', r'\n\1:', rest)
     return prompt, formatted_rest.strip()
 
+def create_red_x_overlay(size):
+    overlay = Image.new('RGBA', size, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(overlay)
+    draw.line((0, 0) + overlay.size, fill=(255, 0, 0, 128), width=5)
+    draw.line((0, overlay.height, overlay.width, 0), fill=(255, 0, 0, 128), width=5)
+    return overlay
+
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Stable Diffusion PNG Metadata Explorer")
         self.geometry("1400x800")
-        self.dark_mode = False
         self.thumbnail_size = (100, 100)
         self.csv_path = None
         self.load_config()
         self.create_widgets()
+        self.apply_theme()
+        if self.last_folder:
+            self.populate_tree(self.last_folder)
 
     def create_widgets(self):
         self.grid_columnconfigure(0, weight=1)
@@ -142,27 +151,31 @@ class App(tk.Tk):
         ttk.Button(right_panel, text="Export to CSV", command=self.export_to_csv).grid(row=3, column=0, columnspan=2, pady=5, sticky="ew")
 
         # Dark mode toggle
-        ttk.Button(self, text="Toggle Dark Mode", command=self.toggle_dark_mode).grid(row=1, column=0, pady=5)
+        self.dark_mode_var = tk.BooleanVar(value=self.dark_mode)
+        ttk.Checkbutton(self, text="Dark Mode", variable=self.dark_mode_var, command=self.toggle_dark_mode).grid(row=1, column=0, pady=5)
 
     def load_config(self):
-        config_path = os.path.join(os.path.dirname(__file__), 'config.json')
+        config_path = os.path.join(os.path.dirname(__file__), 'config.yaml')
         if os.path.exists(config_path):
             with open(config_path, 'r') as f:
-                config = json.load(f)
+                config = yaml.safe_load(f)
                 self.last_folder = config.get('last_folder', '')
+                self.dark_mode = config.get('dark_mode', False)
                 self.csv_path = config.get('csv_path', None)
         else:
             self.last_folder = ''
+            self.dark_mode = False
             self.csv_path = None
 
     def save_config(self):
         config = {
             'last_folder': self.last_folder,
+            'dark_mode': self.dark_mode,
             'csv_path': self.csv_path
         }
-        config_path = os.path.join(os.path.dirname(__file__), 'config.json')
+        config_path = os.path.join(os.path.dirname(__file__), 'config.yaml')
         with open(config_path, 'w') as f:
-            json.dump(config, f)
+            yaml.dump(config, f)
 
     def browse_folder(self):
         folder_path = filedialog.askdirectory(initialdir=self.last_folder)
@@ -213,6 +226,14 @@ class App(tk.Tk):
                     img = Image.open(full_path)
                     img.thumbnail(self.thumbnail_size)
                     photo = ImageTk.PhotoImage(img)
+                    
+                    # Check if the file contains Stable Diffusion metadata
+                    if not extract_stable_diffusion_metadata(full_path):
+                        # If no metadata, create a red 'x' overlay
+                        overlay = create_red_x_overlay(img.size)
+                        img = Image.alpha_composite(img.convert('RGBA'), overlay)
+                        photo = ImageTk.PhotoImage(img)
+
                     btn = ttk.Button(self.thumbnail_frame, image=photo, command=lambda p=full_path: self.on_thumbnail_click(p))
                     btn.image = photo
                     btn.grid(row=row, column=col, padx=5, pady=5)
@@ -263,7 +284,11 @@ class App(tk.Tk):
         messagebox.showinfo("Copied", "Prompt copied to clipboard!")
 
     def toggle_dark_mode(self):
-        self.dark_mode = not self.dark_mode
+        self.dark_mode = self.dark_mode_var.get()
+        self.save_config()
+        self.apply_theme()
+
+    def apply_theme(self):
         bg_color = '#2b2b2b' if self.dark_mode else 'SystemButtonFace'
         fg_color = 'white' if self.dark_mode else 'SystemButtonText'
         style = ttk.Style()
@@ -313,9 +338,9 @@ class App(tk.Tk):
             
             csv_writer.writerow(row_data)
 
-      # messagebox.showinfo("Export Successful", f"Data exported to {self.csv_path}")
-    
+        # messagebox.showinfo("Export Successful", f"Data exported to {self.csv_path}")
 
 if __name__ == "__main__":
     app = App()
+    app.protocol("WM_DELETE_WINDOW", lambda: (app.save_config(), app.destroy()))
     app.mainloop()
