@@ -13,7 +13,7 @@ def read_png_chunks(file_path):
         if f.read(8) != b'\x89PNG\r\n\x1a\n':
             raise ValueError("Not a valid PNG file")
         while True:
-            try:
+            try:``
                 length = struct.unpack('>I', f.read(4))[0]
                 chunk_type = f.read(4)
                 data = f.read(length)
