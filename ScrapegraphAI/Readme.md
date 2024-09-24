@@ -25,7 +25,7 @@ ScrapegraphAI is a powerful web scraping tool with a user-friendly graphical int
 
 1. Clone this repository:
    ```
-   git clone https://github.com/yourusername/scrapegraphai.git
+   git clone https://github.com/Impaired_Tools/scrapegraphai.git
    cd scrapegraphai
    ```
 
