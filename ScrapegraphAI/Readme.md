@@ -1,67 +1,63 @@
-# ScrapegraphAI
+# Intelligent Web Scraper with GUI
 
-ScrapegraphAI is a powerful web scraping tool with a user-friendly graphical interface. It uses AI-powered scraping to extract specific information from websites based on user-defined prompts.
+This project is an advanced web scraping tool that combines the power of AI-driven content extraction with a user-friendly graphical interface. It allows users to scrape multiple websites simultaneously, guided by custom prompts for targeted information retrieval.
 
 ## Features
 
-- Easy-to-use graphical user interface
-- AI-powered web scraping using GPT models
-- Supports scraping multiple URLs in batch
-- Customizable LLM prompts for targeted information extraction
-- Dark mode for comfortable viewing
-- Export results in JSON and CSV formats
-- Real-time console output and progress tracking
-- Temporary file storage for large scraping tasks
+- **AI-Powered Scraping**: Utilizes OpenAI's GPT model for intelligent content extraction.
+- **User-Friendly GUI**: Built with Tkinter for easy interaction and visualization of the scraping process.
+- **Multi-URL Support**: Scrape multiple websites in one go.
+- **Custom Prompts**: Tailor your scraping tasks with custom AI prompts.
+- **Real-Time Progress Tracking**: Monitor the scraping progress for each URL.
+- **Dark Mode**: Toggle between light and dark themes for comfortable viewing.
+- **Export Options**: Save results in JSON and/or CSV formats.
+- **Temporary File Handling**: Safely stores intermediate results to prevent data loss.
 
-## Requirements
+## Prerequisites
 
 - Python 3.7+
-- tkinter
-- scrapegraphai
-- python-dotenv
-- openai
+- OpenAI API key
 
 ## Installation
 
 1. Clone this repository:
    ```
-   git clone https://github.com/Impaired_Tools/scrapegraphai.git
-   cd scrapegraphai
+   git clone https://github.com/yourusername/intelligent-web-scraper.git
+   cd intelligent-web-scraper
    ```
 
-2. Install the required packages:
+2. Install the required dependencies:
    ```
-   pip install scrapegraphai python-dotenv openai
+   pip install -r requirements.txt
    ```
 
-3. Create a `.env` file in the project root and add your OpenAI API key:
-   ```
-   OPENAI_API_KEY=your_api_key_here
-   ```
+3. Set up your OpenAI API key:
+   - Create a `.env` file in the project root.
+   - Add your API key: `OPENAI_API_KEY=your_api_key_here`
 
 ## Usage
 
-1. Run the script:
+1. Run the main script:
    ```
-   python scrapegraphai.py
+   python main.py
    ```
 
 2. In the GUI:
-   - Enter the URLs you want to scrape in the "URL Input" section (one per line)
-   - Customize the LLM prompt in the "LLM Prompt" section
-   - Click "Scrape" to start the scraping process
-   - Monitor progress in the console output and progress bar
-   - View results in the "Scraping Results" section
-   - Export results in JSON and/or CSV format using the "Export Results" button
+   - Enter the URLs you want to scrape (one per line) in the "URL Input" section.
+   - Customize the AI prompt in the "LLM Prompt" section if needed.
+   - Click "Scrape" to start the process.
+   - Monitor progress in the "Scraping Progress" bar and "Console Output".
+   - View results in the "Scraping Results" section.
+   - Export results using the "Export Results" button.
 
 ## Configuration
 
-You can modify the `create_scraper_config()` function to customize the scraper settings:
+You can modify the `config.py` file to adjust settings such as:
 
-- `model`: Choose the OpenAI model to use (default: "openai/gpt-4o-mini")
-- `verbose`: Set to `True` for detailed logging (default: `True`)
-- `headless`: Set to `True` for headless browser scraping (default: `False`)
-- `user_agent`: Customize the user agent string (default: "CustomWebScraper v1.0")
+- AI model selection
+- Headless browser mode
+- User agent string
+- Verbosity of logging
 
 ## Contributing
 
@@ -70,3 +66,10 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- [OpenAI](https://openai.com/) for providing the GPT model used in this project.
+- [Tkinter](https://docs.python.org/3/library/tkinter.html) for the GUI framework.
+- [ScrapegrapeAI](https://github.com/scrapegrape/scrapegrape) for the intelligent scraping capabilities.
+
