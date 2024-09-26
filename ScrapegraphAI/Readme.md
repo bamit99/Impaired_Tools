@@ -1,6 +1,7 @@
 # Intelligent Web Scraper with GUI
 
-This project is an advanced web scraping tool that combines the power of AI-driven content extraction with a user-friendly graphical interface. It allows users to scrape multiple websites simultaneously, guided by custom prompts for targeted information retrieval.
+This project is an advanced web scraping tool that combines the power of AI-driven content extraction with a user-friendly graphical interface. It allows users to scrape multiple websites simultaneously, guided by custom prompts for targeted information retrieval. The project is based on existing Modules provided @ https://github.com/ScrapeGraphAI/Scrapegraph-ai
+Please make sure to install the needed package from the above URL before proceeding to use this Python Code.
 
 ## Features
 
@@ -26,12 +27,7 @@ This project is an advanced web scraping tool that combines the power of AI-driv
    cd intelligent-web-scraper
    ```
 
-2. Install the required dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
-
-3. Set up your OpenAI API key:
+2. Set up your OpenAI API key:
    - Create a `.env` file in the project root.
    - Add your API key: `OPENAI_API_KEY=your_api_key_here`
 
