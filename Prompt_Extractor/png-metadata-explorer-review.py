@@ -13,7 +13,7 @@ def read_png_chunks(file_path):
         if f.read(8) != b'\x89PNG\r\n\x1a\n':
             raise ValueError("Not a valid PNG file")
         while True:
-            try:``
+            try:
                 length = struct.unpack('>I', f.read(4))[0]
                 chunk_type = f.read(4)
                 data = f.read(length)
@@ -75,6 +75,7 @@ class App(tk.Tk):
         self.apply_theme()
         if self.last_folder:
             self.populate_tree(self.last_folder)
+        self.bind("<Configure>", self.on_window_resize)
 
     def create_widgets(self):
         self.grid_columnconfigure(0, weight=1)
@@ -214,10 +215,16 @@ class App(tk.Tk):
         elif os.path.isdir(selected_item):
             self.display_thumbnails(selected_item)
 
+    def calculate_columns(self):
+        frame_width = self.thumbnail_canvas.winfo_width()
+        thumbnail_width = self.thumbnail_size[0] + 10  # Add padding
+        return max(1, frame_width // thumbnail_width)
+
     def display_thumbnails(self, directory):
         for widget in self.thumbnail_frame.winfo_children():
             widget.destroy()
 
+        columns = self.calculate_columns()
         row, col = 0, 0
         for item in os.listdir(directory):
             if item.lower().endswith('.png'):
@@ -238,7 +245,7 @@ class App(tk.Tk):
                     btn.image = photo
                     btn.grid(row=row, column=col, padx=5, pady=5)
                     col += 1
-                    if col > 4:
+                    if col >= columns:
                         col = 0
                         row += 1
                 except Exception as e:
@@ -263,6 +270,12 @@ class App(tk.Tk):
 
     def on_frame_configure(self, event):
         self.thumbnail_canvas.configure(scrollregion=self.thumbnail_canvas.bbox("all"))
+
+    def on_window_resize(self, event):
+        if event.widget == self:
+            selected_item = self.tree.focus()
+            if os.path.isdir(selected_item):
+                self.display_thumbnails(selected_item)
 
     def display_metadata(self, file_path):
         try:
