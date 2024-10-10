@@ -1,3 +1,4 @@
+![Screenshot](https://github.com/user-attachments/assets/ca4a97be-8c48-4508-8584-f7e6b4f7a15b)
 # Stable Diffusion PNG Metadata Explorer
 
 ## Overview
