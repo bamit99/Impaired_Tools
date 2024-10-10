@@ -3,9 +3,9 @@ from tkinter import ttk, messagebox, filedialog
 import os
 import csv
 from PIL import Image, ImageTk
-from .metadata import extract_stable_diffusion_metadata, format_metadata
-from .utils import create_red_x_overlay
-from .config import load_config, save_config
+from metadata import extract_stable_diffusion_metadata, format_metadata
+from utils import create_red_x_overlay
+from config import load_config, save_config
 import subprocess
 
 class App(tk.Tk):
